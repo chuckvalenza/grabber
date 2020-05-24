@@ -16,7 +16,7 @@ from os.path import expanduser
 #                              global variables                                #
 # ---------------------------------------------------------------------------- #
 
-DL_DIR = "./downloads/"
+DL_DIR = "./download/"
 SSH_CONFIG = expanduser("~/") + ".ssh/config"
 SSH_KEY = expanduser("~/") + ".ssh/id_rsa"
 L_HOSTNAME = "localhost"
@@ -87,52 +87,49 @@ class RemoteClient:
 		if self.client is None:
 			self.client = self.__connect()
 		for i in self.sftp.listdir(sig_path):
-			data_file = tgt_path + i
-			lstatout = str(self.sftp.lstat(data_file)).split()[0]
-			cmd = ""
+			if i is not "\n":
+				data_file = tgt_path + i
+				lstatout = str(self.sftp.lstat(data_file)).split()[0]
+				cmd = ""
 
-			data_file = data_file.replace(" ", "\ ")
-			data_file = data_file.replace("'", "\\'")
-			#data_file = data_file.replace("(", "\(")
-			#data_file = data_file.replace(")", "\)")
-			#data_file = data_file.replace("[", "\[")
-			#data_file = data_file.replace("]", "\]")
+				data_file = data_file.replace(" ", "\ ")
+				data_file = data_file.replace("'", "\\'")
 
-			sig_file = sig_path + i
-			sig_file = sig_file.replace(" ", "\ ")
-			sig_file = sig_file.replace("'", "\\'")
-			sig_file = sig_file.replace("(", "\(")
-			sig_file = sig_file.replace(")", "\)")
-			sig_file = sig_file.replace("[", "\[")
-			sig_file = sig_file.replace("]", "\]")
+				sig_file = sig_path + i
+				sig_file = sig_file.replace(" ", "\ ")
+				sig_file = sig_file.replace("'", "\\'")
+				sig_file = sig_file.replace("(", "\(")
+				sig_file = sig_file.replace(")", "\)")
+				sig_file = sig_file.replace("[", "\[")
+				sig_file = sig_file.replace("]", "\]")
 
-			# checks if file or dir to decide whether to use pget or mirror
-			if "d" in lstatout:
-				cmd = 'lftp -e "open ' + self.host + \
-					'; mirror -c --use-pget-n=10 ' + data_file + '; exit"'
-			else:
-				cmd = 'lftp -e "open ' + self.host + \
-					'; pget -n 10 ' + data_file + '; exit"'
+				# decide whether to use mirror or pget
+				if "d" in lstatout:
+					cmd = 'lftp -e "open ' + self.host + \
+						'; mirror -c --use-pget-n=10 ' + data_file + '; exit"'
+				else:
+					cmd = 'lftp -e "open ' + self.host + \
+						'; pget -n 10 ' + data_file + '; exit"'
 
-			contents_holder = []
-			sig_contents = self.__check_grab(sig_path + i)
-			for s in sig_contents:
-				contents_holder.append(s.replace("\n", ""))
-			sig_contents = contents_holder
+				contents_holder = []
+				sig_contents = self.__check_grab(sig_file)
+				for s in sig_contents:
+					contents_holder.append(s.replace("\n", ""))
+				sig_contents = contents_holder
 
-			if not any(L_HOSTNAME in x for x in sig_contents):
-				print(cmd)
-				system(cmd)
-				self.__annotate_grab(sig_path + i)
-				sig_contents.append(L_HOSTNAME)
-			else:
-				print("File already grabbed from this client...")
+				if not any(L_HOSTNAME in x for x in sig_contents):
+					print(cmd)
+					system(cmd)
+					self.__annotate_grab(sig_file)
+					sig_contents.append(L_HOSTNAME)
+				else:
+					print("File already grabbed from this client...")
 
-			if all(g in sig_contents for g in GRABBERS):
-				print("All grabbers have fetched, removing.")
-				self.client.exec_command("rm -r " + sig_file)
-			else:
-				print("Other grabbers still need to fetch.")
+				if all(g in sig_contents for g in GRABBERS):
+					print("All grabbers have fetched, removing.")
+					self.client.exec_command("rm -r " + sig_file)
+				else:
+					print("Other grabbers still need to fetch.")
 			
 
 	def execute_commands(self, commands):
