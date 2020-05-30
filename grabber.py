@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------------------- #
 
 import sys
-from os import system
+from os import system, getpid, path, unlink
 from paramiko import SSHClient, AutoAddPolicy, RSAKey, SSHConfig
 from paramiko.auth_handler import AuthenticationException, SSHException
 from loguru import logger
@@ -132,7 +132,6 @@ class RemoteClient:
 					self.client.exec_command("rm -r " + sig_file)
 				else:
 					print("Other grabbers still need to fetch.")
-			
 
 	def execute_commands(self, commands):
 		if self.client is None:
@@ -146,19 +145,30 @@ class RemoteClient:
 #                                  execution                                   #
 # ---------------------------------------------------------------------------- #
 
-def main():
-	remote_host = sys.argv[1]
-	categories = sys.argv[2:]
-	target_dir = signal_dir = DL_DIR
-
+def grab(remote_host, categories):
 	for category in categories:
+		target_dir = signal_dir = DL_DIR
 		target_dir += "data/" + category + "/"
 		signal_dir += "finished/" + category + "/"
 		remote_cxn = RemoteClient(remote_host, SSH_CONFIG, SSH_KEY)
 		remote_cxn.grab(category, signal_dir, target_dir)
-		#remote_cxn.execute_commands(["ls -1 " + signal_dir])
-
 	remote_cxn.disconnect()
+
+def main():
+	remote_host = sys.argv[1]
+	categories = sys.argv[2:]
+
+	pid = str(getpid())
+	pidfile = "/tmp/grabber.pid"
+
+	if path.isfile(pidfile):
+		print("grabber is already running, exiting")
+		sys.exit()
+	open(pidfile, 'w').write(pid)
+	try:
+		grab(remote_host, categories)
+	finally:
+		unlink(pidfile)
 
 main()
 
