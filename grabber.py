@@ -121,9 +121,9 @@ class RemoteClient:
 
 				if not any(L_HOSTNAME in x for x in sig_contents):
 					print(cmd)
-					system(cmd)
-					self.__annotate_grab(sig_file)
-					sig_contents.append(L_HOSTNAME)
+					if system(cmd) == 0:
+						self.__annotate_grab(sig_file)
+						sig_contents.append(L_HOSTNAME)
 				else:
 					print("File already grabbed from this client...")
 
