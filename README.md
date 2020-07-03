@@ -25,6 +25,6 @@ python3 complete.py <category> example] [file name (2015).txt
 ```
 
 ```
-python3 autodl.py <Host shortname> <category1> <category2>
+python3 grabber.py <Host shortname> <category1> <category2>
 ```
 
