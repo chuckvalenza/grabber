@@ -96,6 +96,7 @@ class RemoteClient:
 
 				data_file = data_file.replace(" ", "\ ")
 				data_file = data_file.replace("'", "\\'")
+				data_file = data_file.replace('"', '\\\\\\"')
 
 				sig_file = sig_path + i
 				sig_file = sig_file.replace(" ", "\ ")
@@ -104,6 +105,7 @@ class RemoteClient:
 				sig_file = sig_file.replace(")", "\)")
 				sig_file = sig_file.replace("[", "\[")
 				sig_file = sig_file.replace("]", "\]")
+				sig_file = sig_file.replace("&", "\&")
 
 				# decide whether to use mirror or pget
 				if "d" in lstatout:
