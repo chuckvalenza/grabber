@@ -109,11 +109,15 @@ class RemoteClient:
 
 				# decide whether to use mirror or pget
 				if "d" in lstatout:
+					print("Grabbing directory: " + data_file)
 					cmd = 'lftp -e "open ' + self.host + \
 						'; mirror -c --use-pget-n=10 ' + data_file + '; exit"'
+					print(cmd)
 				else:
+					print("Grabbing file: " + data_file)
 					cmd = 'lftp -e "open ' + self.host + \
-						'; pget -n 10 ' + data_file + '; exit"'
+						'; pget -c -n 10 ' + data_file + '; exit"'
+					print(cmd)
 
 				contents_holder = []
 				sig_contents = self.__check_grab(sig_file)
